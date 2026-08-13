@@ -1,0 +1,67 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StateBackend",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::ae-signal-tfstate-*",
+        "arn:aws:s3:::ae-signal-tfstate-*/*"
+      ]
+    },
+    {
+      "Sid": "ProjectBuckets",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::ae-signal-*", "arn:aws:s3:::ae-signal-*/*"]
+    },
+    {
+      "Sid": "ComputeAndOrchestration",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*",
+        "states:*",
+        "glue:*",
+        "events:*",
+        "sns:*",
+        "sqs:*",
+        "athena:*",
+        "logs:*",
+        "cloudwatch:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BedrockInvoke",
+      "Effect": "Allow",
+      "Action": ["bedrock:InvokeModel", "bedrock:ListFoundationModels", "bedrock:GetFoundationModel"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ScopedIamOnly",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:PassRole",
+        "iam:TagRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies"
+      ],
+      "Resource": "arn:aws:iam::*:role/ae-signal-*"
+    },
+    {
+      "Sid": "BudgetsAndReadOnlyIdentity",
+      "Effect": "Allow",
+      "Action": ["budgets:*", "sts:GetCallerIdentity", "iam:ListRoles", "kms:Describe*", "kms:List*", "kms:CreateKey", "kms:CreateAlias", "kms:TagResource", "kms:ScheduleKeyDeletion", "kms:PutKeyPolicy", "kms:GetKeyPolicy", "kms:GetKeyRotationStatus", "kms:EnableKeyRotation"],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+
+# AWS
+.aws/
+credentials
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Data - never commit raw or derived data
+data/
+*.parquet
+*.json.gz
+!tests/fixtures/*.json
+
+# Secrets
+.env
+.env.*
+*.key
+secrets.*
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+infra/backend.hcl

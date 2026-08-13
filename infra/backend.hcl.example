@@ -1,0 +1,4 @@
+# Copy to backend.hcl and fill in. Written for you by
+# scripts/bootstrap-backend.sh. Used as:  terraform init -backend-config=backend.hcl
+bucket = "ae-signal-tfstate-REPLACE_WITH_ACCOUNT_ID"
+region = "us-east-1"
