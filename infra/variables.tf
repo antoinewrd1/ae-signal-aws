@@ -41,3 +41,28 @@ variable "monthly_budget_usd" {
   type        = number
   default     = 25
 }
+
+variable "lambda_runtime" {
+  description = "Lambda Python runtime. Pin deliberately - your local Python may be newer than any available runtime."
+  type        = string
+  default     = "python3.13"
+}
+
+variable "max_records_per_window" {
+  description = "Cap on records pulled per date window. Keeps runs inside the openFDA quota."
+  type        = number
+  default     = 500
+}
+
+variable "openfda_api_key" {
+  description = "Optional openFDA API key. Raises the daily quota from 1,000 to 120,000 requests."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "enable_schedule" {
+  description = "Enable the daily EventBridge trigger. Leave false unless actively running the pipeline."
+  type        = bool
+  default     = false
+}

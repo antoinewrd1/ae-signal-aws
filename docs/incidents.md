@@ -14,4 +14,22 @@ the fix is less interesting than the diagnosis.
 
 ---
 
-_No incidents recorded yet._
+## request_count silently reported zero
+
+**Symptom** — Every run manifest reported `request_count: 0` while the
+extractor was demonstrably making API calls.
+
+**Impact** — No pipeline failure. The manifest simply carried a wrong value,
+which is worse: quota consumption was unmeasurable and nothing signalled it.
+
+**Root cause** — The field was declared on the RunManifest dataclass before
+the code that populates it was written, and no test asserted on it. Unit
+tests all mocked `OpenFDAClient._get`, which is the exact method the counter
+lives inside, so the counter never executed under test.
+
+**Fix** — Increment in `_get` on every attempt (retries consume quota too),
+and assign `client.request_count` to the manifest in both the success and
+failure paths.
+
+**Prevention** — Added a test that mocks at the `urllib.request.urlopen`
+boundary rather than at `_get`, so the counted code path actually runs.

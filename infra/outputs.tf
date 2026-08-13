@@ -17,3 +17,18 @@ output "budget_name" {
   description = "Name of the monthly cost budget."
   value       = aws_budgets_budget.monthly.name
 }
+
+output "bronze_bucket" {
+  description = "S3 bucket holding raw openFDA payloads."
+  value       = aws_s3_bucket.bronze.id
+}
+
+output "extract_function_name" {
+  description = "Name of the extractor Lambda."
+  value       = aws_lambda_function.extract.function_name
+}
+
+output "extract_log_group" {
+  description = "CloudWatch log group for the extractor."
+  value       = aws_cloudwatch_log_group.extract.name
+}
