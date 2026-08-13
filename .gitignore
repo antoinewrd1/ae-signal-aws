@@ -39,3 +39,4 @@ infra/.build/
 infra/backend.hcl
 secrets.*
 venv/
+.cache/

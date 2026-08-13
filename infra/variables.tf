@@ -66,3 +66,15 @@ variable "enable_schedule" {
   type        = bool
   default     = false
 }
+
+variable "glue_version" {
+  description = "AWS Glue version. Determines the bundled Spark and Python runtime."
+  type        = string
+  default     = "5.0"
+}
+
+variable "bedrock_model_id" {
+  description = "Bedrock model or inference profile ID. Model IDs get retired - keep this as config, never hardcoded, and log it with every result."
+  type        = string
+  default     = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+}

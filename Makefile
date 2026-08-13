@@ -1,4 +1,4 @@
-.PHONY: help venv install preflight lint fmt test tf-init tf-plan tf-apply tf-destroy up down clean
+.PHONY: help venv install preflight lint fmt test topic produce consume offsets transform-local glue-run enrich-local enrich-metrics cache-clear tf-init tf-plan tf-apply tf-destroy up down clean
 .DEFAULT_GOAL := help
 
 TF     := terraform -chdir=infra
@@ -48,8 +48,39 @@ tf-apply:  ## Apply infrastructure changes
 tf-destroy:  ## Tear everything down. Run this when you stop working.
 	$(TF) destroy
 
-up:  ## Start local Redpanda (used from day 2 onward)
+up:  ## Start local Redpanda + console (http://localhost:8080)
 	docker compose -f docker/docker-compose.yml up -d
+	@echo "  Waiting for broker..."
+	@sleep 8
+	@docker exec ae-signal-redpanda rpk cluster health || true
+
+topic:  ## Create the drug-event topic (3 partitions)
+	docker exec ae-signal-redpanda rpk topic create ae-signal.drug-event.raw -p 3 -r 1 || true
+	docker exec ae-signal-redpanda rpk topic list
+
+produce:  ## Replay bronze records onto the topic
+	$(BIN)/python -m src.stream produce --rate 200 --limit 500
+
+consume:  ## Consume the topic into bronze-stream/
+	$(BIN)/python -m src.stream consume --max-records 100 --max-batches 5
+
+transform-local:  ## Run the Spark transform against ./data (no AWS, no cost)
+	$(BIN)/python -m src.transform.job --bronze_path './data/bronze/drug_event/*/*.json.gz' --silver_path ./data/silver --gold_path ./data/gold
+
+glue-run:  ## Trigger the deployed Glue job (BILLS ~10 min minimum)
+	aws glue start-job-run --job-name $$(terraform -chdir=infra output -raw glue_job_name)
+
+enrich-local:  ## Bedrock enrichment on 20 silver records (COSTS ~$0.01)
+	$(BIN)/python -m src.enrich --silver ./data/silver --limit 20
+
+enrich-metrics:  ## Show the latest enrichment metrics
+	@cat $$(ls -t data/gold/_metrics/assessments/*/*.json | head -1)
+
+cache-clear:  ## Drop the Bedrock response cache
+	rm -rf .cache/bedrock && echo "cache cleared"
+
+offsets:  ## Show consumer group lag
+	docker exec ae-signal-redpanda rpk group describe ae-signal-bronze-writer
 
 down:  ## Stop local containers
 	docker compose -f docker/docker-compose.yml down -v

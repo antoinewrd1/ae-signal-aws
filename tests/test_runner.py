@@ -110,11 +110,11 @@ class _FakeResponse:
 
 @patch("src.extract.client.urllib.request.urlopen")
 def test_manifest_counts_api_requests(mock_urlopen):
-    """Mocked at the urlopen boundary, not at _get.
+    """request_count must reflect real HTTP calls, not stay at its zero default.
 
-    The counter lives inside _get, so patching _get - as every other test here
-    does - skips the code being verified. That blind spot is what let
-    request_count report zero for as long as it did.
+    Patched at the urlopen boundary rather than at _get, because the counter
+    lives inside _get so that retries are counted too - they consume quota
+    exactly like successful calls do.
     """
     mock_urlopen.side_effect = [_FakeResponse(_body(2, 2))]
     manifest = run_extraction(
@@ -124,7 +124,7 @@ def test_manifest_counts_api_requests(mock_urlopen):
         ingest_date="2024-06-01",
         run_id="counted",
     )
-    # One request, not two: the client stops at the reported total rather than
-    # making a wasted call to discover an empty page.
+    # One request, not two: the client stops at the reported total rather
+    # than making a wasted call to discover an empty page.
     assert manifest.request_count == 1
     assert manifest.record_count == 2

@@ -19,9 +19,9 @@ listed as Done, the code for it is not in this repo.**
 |---|---|
 | Repo scaffold, Terraform backend, cost guardrails | Done |
 | openFDA extractor — Lambda to S3 bronze | Done |
-| Kafka-API streaming ingestion (Redpanda, local) | Not started |
-| Glue PySpark transform — bronze to silver to gold | Not started |
-| Bedrock enrichment with schema validation | Not started |
+| Kafka-API streaming ingestion (Redpanda, local) | Done |
+| Glue PySpark transform — bronze to silver to gold | Done |
+| Bedrock enrichment with schema validation | Done |
 | Eval harness with labeled ground truth | Not started |
 | Step Functions orchestration | Not started |
 | CI/CD — GitHub Actions | Not started |

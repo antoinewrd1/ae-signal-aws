@@ -11,11 +11,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+stream = [
+    "confluent-kafka>=2.4",
+]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
     "moto[s3,lambda,sts]>=5.0",
     "responses>=0.25",
+    "confluent-kafka>=2.4",
+    "pyspark>=3.5",
     "ruff>=0.4",
     "black>=24.3",
 ]
@@ -37,6 +42,8 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+# `from pyspark.sql import functions as F` is the universal PySpark idiom.
+ignore = ["N812"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

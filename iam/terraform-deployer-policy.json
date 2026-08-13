@@ -4,7 +4,12 @@
     {
       "Sid": "StateBackend",
       "Effect": "Allow",
-      "Action": ["s3:ListBucket", "s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
       "Resource": [
         "arn:aws:s3:::ae-signal-tfstate-*",
         "arn:aws:s3:::ae-signal-tfstate-*/*"
@@ -14,7 +19,10 @@
       "Sid": "ProjectBuckets",
       "Effect": "Allow",
       "Action": "s3:*",
-      "Resource": ["arn:aws:s3:::ae-signal-*", "arn:aws:s3:::ae-signal-*/*"]
+      "Resource": [
+        "arn:aws:s3:::ae-signal-*",
+        "arn:aws:s3:::ae-signal-*/*"
+      ]
     },
     {
       "Sid": "ComputeAndOrchestration",
@@ -35,7 +43,11 @@
     {
       "Sid": "BedrockInvoke",
       "Effect": "Allow",
-      "Action": ["bedrock:InvokeModel", "bedrock:ListFoundationModels", "bedrock:GetFoundationModel"],
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:ListFoundationModels",
+        "bedrock:GetFoundationModel"
+      ],
       "Resource": "*"
     },
     {
@@ -53,14 +65,33 @@
         "iam:DeleteRolePolicy",
         "iam:GetRolePolicy",
         "iam:ListRolePolicies",
-        "iam:ListAttachedRolePolicies"
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:ListRoleTags",
+        "iam:UntagRole",
+        "iam:UpdateRole",
+        "iam:UpdateAssumeRolePolicy"
       ],
       "Resource": "arn:aws:iam::*:role/ae-signal-*"
     },
     {
       "Sid": "BudgetsAndReadOnlyIdentity",
       "Effect": "Allow",
-      "Action": ["budgets:*", "sts:GetCallerIdentity", "iam:ListRoles", "kms:Describe*", "kms:List*", "kms:CreateKey", "kms:CreateAlias", "kms:TagResource", "kms:ScheduleKeyDeletion", "kms:PutKeyPolicy", "kms:GetKeyPolicy", "kms:GetKeyRotationStatus", "kms:EnableKeyRotation"],
+      "Action": [
+        "budgets:*",
+        "sts:GetCallerIdentity",
+        "iam:ListRoles",
+        "kms:Describe*",
+        "kms:List*",
+        "kms:CreateKey",
+        "kms:CreateAlias",
+        "kms:TagResource",
+        "kms:ScheduleKeyDeletion",
+        "kms:PutKeyPolicy",
+        "kms:GetKeyPolicy",
+        "kms:GetKeyRotationStatus",
+        "kms:EnableKeyRotation"
+      ],
       "Resource": "*"
     }
   ]

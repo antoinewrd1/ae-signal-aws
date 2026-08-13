@@ -32,3 +32,13 @@ output "extract_log_group" {
   description = "CloudWatch log group for the extractor."
   value       = aws_cloudwatch_log_group.extract.name
 }
+
+output "glue_job_name" {
+  description = "Name of the transform job."
+  value       = aws_glue_job.transform.name
+}
+
+output "glue_database" {
+  description = "Glue Data Catalog database."
+  value       = aws_glue_catalog_database.main.name
+}
