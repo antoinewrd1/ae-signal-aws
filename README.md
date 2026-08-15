@@ -22,7 +22,7 @@ listed as Done, the code for it is not in this repo.**
 | Kafka-API streaming ingestion (Redpanda, local) | Done |
 | Glue PySpark transform — bronze to silver to gold | Done |
 | Bedrock enrichment with schema validation | Done |
-| Eval harness with labeled ground truth | Not started |
+| Eval harness with labeled ground truth | Done |
 | Step Functions orchestration | Not started |
 | CI/CD — GitHub Actions | Not started |
 | Architecture docs, cost analysis, results | Not started |
