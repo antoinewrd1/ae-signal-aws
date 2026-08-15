@@ -1,0 +1,112 @@
+name: terraform
+
+on:
+  pull_request:
+    paths: ["infra/**", "src/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["infra/**", "src/**", ".github/workflows/terraform.yml"]
+
+# id-token: write is what lets the job request an OIDC token from GitHub.
+# Without it the AWS credential exchange cannot happen at all.
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  # Terraform state takes a lock. Two concurrent runs against the same state
+  # will have one fail on lock acquisition, so serialise them here instead.
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Read-only role. A pull request must not be able to change
+          # infrastructure, whoever opened it.
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.1"
+
+      - name: Init
+        run: |
+          terraform -chdir=infra init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="region=us-east-1"
+
+      - name: Plan
+        id: plan
+        continue-on-error: true
+        run: |
+          terraform -chdir=infra plan -no-color -input=false \
+            -var="owner=github-actions" \
+            -var="alert_email=${{ vars.ALERT_EMAIL }}" \
+            2>&1 | tee plan.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Comment plan on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let plan = fs.readFileSync('plan.txt', 'utf8');
+            // PR comments cap at 65536 characters.
+            const limit = 60000;
+            if (plan.length > limit) {
+              plan = plan.slice(0, limit) + '\n\n... truncated, see the job log ...';
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### Terraform plan\n\n<details><summary>Show</summary>\n\n\`\`\`\n${plan}\n\`\`\`\n\n</details>`
+            });
+
+      - name: Fail if plan errored
+        if: steps.plan.outputs.exitcode != '0'
+        run: exit 1
+
+  apply:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Requires manual approval when a reviewer is configured on this
+    # environment in repository settings. Infrastructure changes should not
+    # land on a merge alone.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.1"
+
+      - name: Init
+        run: |
+          terraform -chdir=infra init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="region=us-east-1"
+
+      - name: Apply
+        run: |
+          terraform -chdir=infra apply -auto-approve -input=false \
+            -var="owner=github-actions" \
+            -var="alert_email=${{ vars.ALERT_EMAIL }}"

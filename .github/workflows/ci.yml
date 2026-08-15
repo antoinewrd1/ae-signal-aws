@@ -5,6 +5,16 @@ on:
     branches: [main]
   pull_request:
 
+# No AWS credentials anywhere in this workflow. Every test mocks its
+# dependencies, so CI can run on a fork's pull request without granting
+# anything.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python:
     runs-on: ubuntu-latest
@@ -13,8 +23,16 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          # Matches the local development interpreter. PySpark lags new Python
+          # releases, and driver/worker version agreement is load-bearing.
+          python-version: "3.12"
           cache: pip
+
+      - name: Set up Java for Spark
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
       - name: Install
         run: pip install -e ".[dev]"
@@ -34,13 +52,13 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.10.5"
+          terraform_version: "1.13.1"
 
       - name: Format check
         run: terraform -chdir=infra fmt -check -recursive
 
-      # -backend=false validates syntax without needing AWS credentials,
-      # which keeps CI free of long-lived secrets.
+      # -backend=false validates syntax without credentials, so this job stays
+      # free of AWS access entirely.
       - name: Validate
         run: |
           terraform -chdir=infra init -backend=false

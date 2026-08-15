@@ -57,3 +57,13 @@ output "enrich_function_name" {
   description = "Name of the enrichment Lambda."
   value       = aws_lambda_function.enrich.function_name
 }
+
+output "ci_plan_role_arn" {
+  description = "Role assumed by pull-request plan jobs. Set as AWS_PLAN_ROLE_ARN repo variable."
+  value       = aws_iam_role.ci_plan.arn
+}
+
+output "ci_apply_role_arn" {
+  description = "Role assumed by main-branch apply jobs. Set as AWS_APPLY_ROLE_ARN repo variable."
+  value       = aws_iam_role.ci_apply.arn
+}

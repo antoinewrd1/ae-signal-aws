@@ -24,7 +24,7 @@ listed as Done, the code for it is not in this repo.**
 | Bedrock enrichment with schema validation | Done |
 | Eval harness with labeled ground truth | Done |
 | Step Functions orchestration | Done |
-| CI/CD — GitHub Actions | Not started |
+| CI/CD — GitHub Actions | Done |
 | Architecture docs, cost analysis, results | Not started |
 
 ## Scope and limitations
@@ -63,4 +63,5 @@ Budget alerts are managed in Terraform (`infra/budget.tf`), not set by hand.
 
 - [Architecture](docs/architecture.md)
 - [Cost analysis](docs/cost.md)
+- [CI/CD and OIDC](docs/cicd.md)
 - [Incidents and root cause writeups](docs/incidents.md)
