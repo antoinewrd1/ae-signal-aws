@@ -17,17 +17,40 @@ import sys
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
-from .gold import build_drug_reaction_pairs, build_gold_signals
-from .quality import (
-    check_date_ordering,
-    check_not_null,
-    check_null_rate,
-    check_row_count,
-    check_unique,
-    enforce,
-)
-from .schema import BRONZE_SCHEMA
-from .silver import build_silver_drug, build_silver_reaction, build_silver_report
+# Dual import path. Locally this module runs as `src.transform.job`, so the
+# relative form resolves against the `src.transform` package. On Glue the
+# script is fetched standalone from S3 and --extra-py-files unpacks with
+# `transform/` at the top level - there is no parent package, and the relative
+# form raises ImportError. Relative stays the default because that is the path
+# the test suite exercises; absolute is the deployed fallback.
+try:
+    from .gold import build_drug_reaction_pairs, build_gold_signals
+    from .quality import (
+        check_date_ordering,
+        check_not_null,
+        check_null_rate,
+        check_row_count,
+        check_unique,
+        enforce,
+    )
+    from .schema import BRONZE_SCHEMA
+    from .silver import build_silver_drug, build_silver_reaction, build_silver_report
+except ImportError:  # pragma: no cover - exercised only inside Glue
+    from transform.gold import build_drug_reaction_pairs, build_gold_signals
+    from transform.quality import (
+        check_date_ordering,
+        check_not_null,
+        check_null_rate,
+        check_row_count,
+        check_unique,
+        enforce,
+    )
+    from transform.schema import BRONZE_SCHEMA
+    from transform.silver import (
+        build_silver_drug,
+        build_silver_reaction,
+        build_silver_report,
+    )
 
 LOG = logging.getLogger(__name__)
 
@@ -164,4 +187,12 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    exit_code = main()
+    # `raise SystemExit(main())` is correct for a CLI and wrong under Glue.
+    # Glue's script wrapper treats any SystemExit as a job failure - including
+    # SystemExit(0) - so a run that did all its work and wrote every output
+    # gets reported as FAILED. Falling off the end of the module is what Glue
+    # reads as success; a non-zero exit is still raised so genuine failures
+    # (including a tripped quality gate) surface correctly.
+    if exit_code != 0:
+        raise SystemExit(exit_code)

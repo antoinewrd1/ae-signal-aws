@@ -55,10 +55,19 @@ resource "aws_iam_role_policy" "glue_data" {
         Resource = [aws_s3_bucket.bronze.arn, "${aws_s3_bucket.bronze.arn}/*"]
       },
       {
-        Sid      = "WriteSilverGold"
-        Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:DeleteObject"]
-        Resource = ["${aws_s3_bucket.bronze.arn}/silver/*", "${aws_s3_bucket.bronze.arn}/gold/*"]
+        Sid    = "WriteSilverGold"
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject"]
+        Resource = [
+          "${aws_s3_bucket.bronze.arn}/silver/*",
+          "${aws_s3_bucket.bronze.arn}/gold/*",
+          # Hadoop writes zero-byte `<prefix>_$folder$` objects as directory
+          # markers, since S3 has no directories. These sit beside the prefix
+          # rather than inside it, so `silver/*` does not match `silver_$folder$`
+          # and the write is denied after Spark has already done all its work.
+          "${aws_s3_bucket.bronze.arn}/silver_*",
+          "${aws_s3_bucket.bronze.arn}/gold_*",
+        ]
       },
       {
         Sid      = "Logs"
