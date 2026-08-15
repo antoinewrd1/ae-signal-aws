@@ -23,7 +23,7 @@ listed as Done, the code for it is not in this repo.**
 | Glue PySpark transform — bronze to silver to gold | Done |
 | Bedrock enrichment with schema validation | Done |
 | Eval harness with labeled ground truth | Done |
-| Step Functions orchestration | Not started |
+| Step Functions orchestration | Done |
 | CI/CD — GitHub Actions | Not started |
 | Architecture docs, cost analysis, results | Not started |
 

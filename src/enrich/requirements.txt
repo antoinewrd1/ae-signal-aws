@@ -1,0 +1,4 @@
+# Runtime dependencies for the enrichment Lambda. boto3 ships with the Lambda
+# runtime; pydantic does not and has a compiled core, so it must be built for
+# the Lambda platform rather than the developer's laptop. See infra/lambda.tf.
+pydantic>=2.6

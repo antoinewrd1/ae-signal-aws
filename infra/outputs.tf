@@ -42,3 +42,18 @@ output "glue_database" {
   description = "Glue Data Catalog database."
   value       = aws_glue_catalog_database.main.name
 }
+
+output "state_machine_arn" {
+  description = "Step Functions pipeline."
+  value       = aws_sfn_state_machine.pipeline.arn
+}
+
+output "alerts_topic_arn" {
+  description = "SNS topic for pipeline failures. Confirm the email subscription."
+  value       = aws_sns_topic.alerts.arn
+}
+
+output "enrich_function_name" {
+  description = "Name of the enrichment Lambda."
+  value       = aws_lambda_function.enrich.function_name
+}

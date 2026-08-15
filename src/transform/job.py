@@ -15,6 +15,7 @@ import logging
 import sys
 
 from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
 
 from .gold import build_drug_reaction_pairs, build_gold_signals
 from .quality import (
@@ -69,6 +70,40 @@ def run(
     drug.write.mode(WRITE_MODE).parquet(f"{silver_path}/drug")
     reaction.write.mode(WRITE_MODE).parquet(f"{silver_path}/reaction")
 
+    # Materialise the enrichment input here, as newline-delimited JSON.
+    # The enrichment step then needs no Spark at all - it reads plain JSON in
+    # a Lambda instead of paying for a cluster to do a three-way join it has
+    # already done once. Spark writes what the next stage needs, not what is
+    # convenient for Spark.
+    enrichment_input = (
+        report.join(
+            drug.groupBy("safetyreportid").agg(
+                F.collect_list(
+                    F.struct("active_substance", "medicinal_product", "drug_role", "indication")
+                ).alias("drugs")
+            ),
+            "safetyreportid",
+            "left",
+        )
+        .join(
+            reaction.groupBy("safetyreportid").agg(
+                F.collect_list(F.struct("reaction_term", "reaction_outcome")).alias("reactions")
+            ),
+            "safetyreportid",
+            "left",
+        )
+        .select(
+            "safetyreportid",
+            "patient_sex",
+            "patient_onset_age",
+            "occur_country",
+            "drugs",
+            "reactions",
+            F.col("seriousness").alias("label_seriousness"),
+        )
+    )
+    enrichment_input.coalesce(1).write.mode(WRITE_MODE).json(f"{silver_path}/enrichment_input")
+
     pairs = build_drug_reaction_pairs(drug, reaction).cache()
     signals = build_gold_signals(pairs)
 
@@ -82,6 +117,7 @@ def run(
         "silver_drug_rows": drug.count(),
         "silver_reaction_rows": reaction.count(),
         "gold_signal_rows": signals.count(),
+        "enrichment_input_rows": enrichment_input.count(),
     }
     LOG.info("Transform complete: %s", stats)
     return stats
@@ -97,9 +133,8 @@ def main() -> int:
     except ImportError:
         # Running outside Glue - parse the same flags directly, and pin the
         # worker interpreter. Spark otherwise launches workers with whatever
-        # `python3` is on PATH, which is the system interpreter rather than
-        # this venv; a minor-version difference fails every task with
-        # PYTHON_VERSION_MISMATCH. Glue sets these itself.
+        # `python3` is on PATH rather than this venv; a minor-version gap fails
+        # every task with PYTHON_VERSION_MISMATCH. Glue sets these itself.
         import argparse
         import os
 

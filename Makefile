@@ -1,4 +1,4 @@
-.PHONY: help venv install preflight lint fmt test topic produce consume offsets transform-local glue-run enrich-local enrich-metrics cache-clear eval tf-init tf-plan tf-apply tf-destroy up down clean
+.PHONY: help venv install preflight lint fmt test topic produce consume offsets transform-local glue-run enrich-local enrich-metrics cache-clear eval run-pipeline pipeline-status tf-init tf-plan tf-apply tf-destroy up down clean
 .DEFAULT_GOAL := help
 
 TF     := terraform -chdir=infra
@@ -81,6 +81,12 @@ cache-clear:  ## Drop the Bedrock response cache
 
 eval:  ## Score enrichment output against ground truth
 	$(BIN)/python -m src.eval --input ./data/gold/assessments --out ./docs/eval.md
+
+run-pipeline:  ## Trigger the Step Functions pipeline (BILLS glue + bedrock)
+	aws stepfunctions start-execution --state-machine-arn $$(terraform -chdir=infra output -raw state_machine_arn) --input '{"limit":20}'
+
+pipeline-status:  ## Last pipeline execution
+	@aws stepfunctions list-executions --state-machine-arn $$(terraform -chdir=infra output -raw state_machine_arn) --max-items 1 --query 'executions[0].[status,startDate,name]' --output table
 
 offsets:  ## Show consumer group lag
 	docker exec ae-signal-redpanda rpk group describe ae-signal-bronze-writer
