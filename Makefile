@@ -1,4 +1,4 @@
-.PHONY: help venv install preflight lint fmt test topic produce consume offsets transform-local glue-run enrich-local enrich-metrics cache-clear eval run-pipeline pipeline-status tf-init tf-plan tf-apply tf-destroy up down clean
+.PHONY: help venv install preflight lint fmt test topic produce consume offsets transform-local glue-run enrich-local enrich-metrics cache-clear eval run-pipeline pipeline-status empty-bucket tf-init tf-plan tf-apply tf-destroy up down clean
 .DEFAULT_GOAL := help
 
 TF     := terraform -chdir=infra
@@ -45,7 +45,10 @@ tf-plan:  ## Show planned infrastructure changes
 tf-apply:  ## Apply infrastructure changes
 	$(TF) apply
 
-tf-destroy:  ## Tear everything down. Run this when you stop working.
+empty-bucket:  ## Empty the versioned bronze bucket (required before destroy)
+	./scripts/empty-bucket.sh $$(terraform -chdir=infra output -raw bronze_bucket)
+
+tf-destroy:  ## Tear everything down. Run empty-bucket first.
 	$(TF) destroy
 
 up:  ## Start local Redpanda + console (http://localhost:8080)
