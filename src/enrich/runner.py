@@ -117,6 +117,11 @@ def enrich_records(
                 cached=cached is not None,
                 label_seriousness=record.get("label_seriousness"),
                 label_primary_suspect=record.get("label_primary_suspect"),
+                input_substances=[
+                    (d.get("active_substance") or "").strip().upper()
+                    for d in (record.get("drugs") or [])
+                    if d.get("active_substance")
+                ],
             )
         )
 

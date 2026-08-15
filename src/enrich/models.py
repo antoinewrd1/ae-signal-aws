@@ -85,6 +85,10 @@ class EnrichedRecord(BaseModel):
     label_seriousness: str | None = None
     label_primary_suspect: str | None = None
 
+    # Substances actually present in the input. Needed to detect a predicted
+    # primary_suspect the model invented rather than selected.
+    input_substances: list[str] = Field(default_factory=list)
+
 
 class DeadLetter(BaseModel):
     """A record the model could not produce valid output for.
